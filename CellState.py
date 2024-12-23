@@ -10,9 +10,9 @@ class CellState(Enum):
     SIX = 6
     SEVEN = 7
     EIGHT = 8
-    NOINFO = "?"
-    MINE = "x"
-    UNKNOW = "o"
+    NOINFO = '?'
+    MINE = 'x'
+    UNKNOW = 'o'
 
     def isMine(self):
         return self == CellState.MINE

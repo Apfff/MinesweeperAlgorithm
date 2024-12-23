@@ -1,5 +1,6 @@
 from typing import List
 from Cell import *
+from ObviousState  import ObviousState
 
 class Set:
     base: InfoCell
@@ -27,23 +28,12 @@ class Set:
         changes = False
         absLowerBound = self.minesLeft - sum([cs.maxM for cs in self.childSets])
         absUpperBound = self.minesLeft - sum([cs.minM for cs in self.childSets])
-        
-        print(f"Initial absLowerBound: {absLowerBound}, absUpperBound: {absUpperBound}")
-        
         for childSet in self.childSets:
             oldMinM = childSet.minM
             oldMaxM = childSet.maxM
-            
-            print(f"Before update - childSet: {childSet}, oldMinM: {oldMinM}, oldMaxM: {oldMaxM}")
-            
-            childSet.minM = max(absLowerBound + oldMaxM, oldMinM)
-            childSet.maxM = min(absUpperBound + oldMinM, oldMaxM)
-            
-            print(f"After update - childSet: {childSet}, newMinM: {childSet.minM}, newMaxM: {childSet.maxM}")
-            
+            childSet.minM = min(max(absLowerBound + oldMaxM, oldMinM), self.minesLeft)
+            childSet.maxM = max(min(absUpperBound + oldMinM, oldMaxM), 0)
             changes = (childSet.minM > oldMinM or childSet.maxM < oldMaxM) or changes
-        
-        print(f"Changes: {changes}")
         return changes
 
 class ReductionSet:
@@ -77,7 +67,7 @@ class ReductionSet:
 
     def isObvious(self):
         if(self.maxM == 0):
-            return 1 #all openCells are numbers
+            return ObviousState.ALL_NUMBERS 
         if(self.minM == len(self.openCells)):
-            return 2 #all openCells are mines
-        return 0 #not obvious
+            return ObviousState.ALL_MINES 
+        return ObviousState.NOT_OBVIOUS 

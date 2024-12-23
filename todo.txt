@@ -1,5 +1,6 @@
-Make Set in SetService 
-
 ASSUMPTION:
 1. maps are always rectangular
 2. maps start at (0,0)
+
+fix current!
+add overall mines left as a Set!

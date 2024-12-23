@@ -20,7 +20,7 @@ class SetService:
         self.map = map
         self.setMask = setMask
         self.sets = []
-        self.reductionSets = []
+        self.reductionSets = []  
 
     def createSets(self):
         for y in range(len(self.map.map)):
@@ -85,7 +85,14 @@ class SetService:
     def initializeReductionSetsMinMax(self):
         [rs.initializeMinMax() for rs in self.reductionSets]
 
-
+    def getResults(self):
+        results = {}
+        for rs in self.reductionSets:
+            key = rs.isObvious()
+            if key not in results:
+                results[key] = []
+            results[key].extend(rs.openCells)
+        return results
 
 
     def createReductionMap(self):
