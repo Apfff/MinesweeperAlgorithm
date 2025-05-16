@@ -1,6 +1,8 @@
-from typing import List
+from typing import List, Dict
+import copy
 from Cell import *
 from ObviousState  import ObviousState
+from termcolor import colored
 
 class Set:
     base: InfoCell
@@ -25,16 +27,59 @@ class Set:
     
 
     def updateChildSets(self):
+        print(colored(f"## updateChild -> {self} ##", "green"))
         changes = False
-        absLowerBound = self.minesLeft - sum([cs.maxM for cs in self.childSets])
-        absUpperBound = self.minesLeft - sum([cs.minM for cs in self.childSets])
+        absLowerBound = self.getAbsoluteLowerBound()
+        absUpperBound = self.minesLeft - sum([cs.minM for cs in self.childSets])     
         for childSet in self.childSets:
             oldMinM = childSet.minM
             oldMaxM = childSet.maxM
+            print(colored(childSet, "blue"))
+            print(f"    oldMinM: {oldMinM} | oldMaxM: {oldMaxM}")
+            print(f"    absLowerBound: {absLowerBound} | absUpperBound: {absUpperBound}")
             childSet.minM = min(max(absLowerBound + oldMaxM, oldMinM), self.minesLeft)
             childSet.maxM = max(min(absUpperBound + oldMinM, oldMaxM), 0)
             changes = (childSet.minM > oldMinM or childSet.maxM < oldMaxM) or changes
+            print(colored(f"{childSet} \n new minM = {childSet.minM}, new maxM = {childSet.maxM}", "white"))
         return changes
+
+    
+    def getAbsoluteLowerBound(self):
+        originDict: Dict['Set', List['ReductionSet']] = {}
+        for childSet in self.childSets:
+            for originSet in childSet.originSets:
+                if originSet not in originDict:
+                    originDict[originSet] = []
+                originDict[originSet].append(childSet)
+        print(colored("originDict:", "light_green"))
+        print("".join([f"\n{key}:\n" + "\n".join([f"   {cs}" for cs in value]) for key, value in originDict.items()]))
+        self.cleanseOriginDict(originDict)
+        print(colored("cleansed originDict:", "light_blue"))
+        print("".join([f"{key}:\n" + "\n".join([f"   {cs}" for cs in value]) for key, value in originDict.items()]))
+        absLowerBound = self.minesLeft
+        for os in originDict:
+            absLowerBound -= min(sum([rs.maxM for rs in originDict.get(os)]), os.minesLeft) #pick individual max's or over os max (merged rs's)
+        return absLowerBound
+        
+    def cleanseOriginDict(self, originDict: Dict['Set', List['ReductionSet']]):
+        impactValueDict: Dict['Set', float] = {} 
+        for os in originDict:
+            if os == self: continue
+            impactValueDict[os] = sum([rs.maxM for rs in originDict.get(os)])/os.minesLeft
+        for cs in self.childSets:
+            if len(cs.originSets) < 2: continue #reductionSet doesnt have multiple originSets (besides self)
+            originSetsCopy = copy.copy(cs.originSets)
+            originSetsCopy.remove(self) #remove self so it doesnt influence biggestImpactOrigin
+            biggestImpactOrigin = max(originSetsCopy, key=impactValueDict.get)
+            originSetsCopy.remove(biggestImpactOrigin)
+            originSetsCopy.append(self) #put it back for removing reductionSets
+            for os in originSetsCopy: originDict.get(os).remove(cs) #remove rs for all os which are not biggestImpactOrigin
+
+
+                
+        print(colored("impact value dict:", "light_blue"))
+        [print(f"{key} -> {impactValueDict.get(key)}") for key in impactValueDict]
+
 
 class ReductionSet:
     originSets: List[Set]
@@ -61,8 +106,11 @@ class ReductionSet:
     def __repr__(self):
         return self.__str__()
     
-    def initializeMinMax(self):
-        self.maxM = min(min([os.minesLeft for os in self.originSets]), len(self.openCells))
+    def initializeMax(self):
+        restrictiveOrigin = min(self.originSets, key=lambda originSet: originSet.minesLeft)
+        self.maxM = min(restrictiveOrigin.minesLeft, len(self.openCells))
+
+    def initializeMin(self):
         self.minM = 0
 
     def isObvious(self):

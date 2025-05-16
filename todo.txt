@@ -2,5 +2,11 @@ ASSUMPTION:
 1. maps are always rectangular
 2. maps start at (0,0)
 
-fix current!
-add overall mines left as a Set!
+1. fix current!
+2. add overall mines left as a Set!
+3. add Agents (interface) as input for runAlgorithm
+4. implement "bot agent"
+
+ReductionSet: restrictiveOrigin
+
+current -> self Set has to be in the originDict because its needed for the calculation of absLowerBound!

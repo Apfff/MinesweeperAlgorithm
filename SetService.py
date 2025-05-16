@@ -76,14 +76,17 @@ class SetService:
                 return reductionSet
         return None
 
+
+    def initializeReductionSetsMinMax(self):
+        [rs.initializeMin() for rs in self.reductionSets]
+        [rs.initializeMax() for rs in self.reductionSets]
+
     def updateReductionSets(self):
         changes = False
         for originSet in self.sets:
             changes = originSet.updateChildSets() or changes
         return changes
-
-    def initializeReductionSetsMinMax(self):
-        [rs.initializeMinMax() for rs in self.reductionSets]
+    
 
     def getResults(self):
         results = {}

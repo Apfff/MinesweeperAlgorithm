@@ -1,8 +1,8 @@
-from typing import List, Dict
+from typing import Dict
+from termcolor import colored
 from SetService import SetService
 from Map import Map
 from SetMask import SetMask
-from Set import ReductionSet
 from ObviousState import ObviousState
 
 def runAlgorithm(inputMap: Map, minesCount: int, setMask: SetMask):
@@ -20,8 +20,19 @@ def runAlgorithm(inputMap: Map, minesCount: int, setMask: SetMask):
     ss.createReductionSets(ss.createReductionMap())
     #initialize minM and maxM values for reduction Sets
     ss.initializeReductionSetsMinMax()
+    print("origin sets pre update:")
+    [print("    ",os) for os in ss.sets]
+    print("Reduction sets pre update:")
+    [print("    ",rs) for rs in ss.reductionSets]
     #update Reduction Sets until there is no change
-    while ss.updateReductionSets(): pass
+    print()
+    i = 1
+    print(colored(f"--- Update Iteration {i} ---\n", "yellow"))
+    while ss.updateReductionSets():
+        #return #TODO remove
+        i += 1
+        print(colored(f"--- Update Iteration {i} ---\n", "yellow"))
+        pass
     outputNextMove(ss.getResults())
 
 def outputNextMove(results: Dict):
